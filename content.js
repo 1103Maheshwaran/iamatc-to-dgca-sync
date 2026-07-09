@@ -47,10 +47,10 @@ if (typeof window.dgcaAutoLoggerInitialized === 'undefined') {
                 currentRowIndex--; // Move backwards
                 if (currentRowIndex >= 0) {
                     console.log(`IAMATC Logger: Proceeding to row ${currentRowIndex + 1} of ${globalParsedData.length}...`);
-                    // Wait 50ms for the DGCA page to process the click, clear the form, and be ready
+                    // Wait 3000ms for the DGCA page to process the click, save the data, clear the form, and be ready
                     setTimeout(() => {
                         fillFormWithRow(currentRowIndex);
-                    }, 50);
+                    }, 3000);
                 } else {
                     console.log("IAMATC Logger: All rows processed.");
                     alert("Success! All rows from the CSV have been fully processed into the Logbook!");
@@ -239,25 +239,25 @@ if (typeof window.dgcaAutoLoggerInitialized === 'undefined') {
                                                     setTimeout(() => {
                                                         const addBtn = document.getElementById('btnAddanssTrnTrainingDtlsVOList');
                                                         if (addBtn) addBtn.click();
-                                                    }, 50);
+                                                    }, 1000);
                                                 }
-                                            }, 50);
+                                            }, 500);
                                         } else {
                                             console.log("IAMATC Logger: Form filled up to atsUnitId. Data used:", entry);
                                         }
-                                    }, 50);
+                                    }, 500);
                                 } else {
                                     console.log("IAMATC Logger: Form filled up to ratingId. Data used:", entry);
                                 }
-                            }, 50);
+                            }, 500);
                         } else {
                             console.log("IAMATC Logger: Form filled up to atStoEgcaId. Data used:", entry);
                         }
-                    }, 50);
+                    }, 500);
                 } else {
                     console.log("IAMATC Logger: Form filled up to postingStation. Data used:", entry);
                 }
-            }, 50); // 50ms delay to ensure options load faster
+            }, 500); // 500ms delay to ensure options load faster
         } else {
             console.log("IAMATC Logger: Form filled (without station). Data used:", entry);
         }
