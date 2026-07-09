@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "DGCA Auto Logger",
+  "version": "1.0",
+  "description": "Upload CSV data and automatically fill the DGCA Logbook.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Open Importer"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://www.dgca.gov.in/*"
+  ]
+}
