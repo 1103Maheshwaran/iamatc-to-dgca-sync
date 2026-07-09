@@ -132,132 +132,120 @@ if (typeof window.dgcaAutoLoggerInitialized === 'undefined') {
         setDateClean(document.getElementById('logBookDate'), logBookDateVal);
         setDateClean(document.getElementById('logBookEndDate'), logBookEndDateVal);
 
+        // Helper function to wait for dropdown options to populate
+        function setDropdownWhenReady(selectElement, targetValue, nextCallback) {
+            if (!selectElement) {
+                nextCallback(false);
+                return;
+            }
+
+            selectElement.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+            selectElement.dispatchEvent(new Event('focus', { bubbles: true }));
+            selectElement.click();
+
+            if (!targetValue) {
+                selectElement.value = "";
+                selectElement.dispatchEvent(new Event('input', { bubbles: true }));
+                selectElement.dispatchEvent(new Event('change', { bubbles: true }));
+                nextCallback(true);
+                return;
+            }
+
+            const checkInterval = 20; // Check every 20ms
+            const maxWaitTime = 2000; // Wait up to 2 seconds
+            let elapsed = 0;
+
+            const intervalId = setInterval(() => {
+                elapsed += checkInterval;
+                const hasOption = Array.from(selectElement.options).some(opt => opt.value === targetValue);
+
+                if (hasOption || elapsed >= maxWaitTime) {
+                    if (!hasOption) console.warn(`IAMATC Logger: Option ${targetValue} not found in ${selectElement.name}, setting anyway...`);
+                    clearInterval(intervalId);
+                    selectElement.value = targetValue;
+                    selectElement.dispatchEvent(new Event('input', { bubbles: true }));
+                    selectElement.dispatchEvent(new Event('change', { bubbles: true }));
+                    nextCallback(true);
+                }
+            }, checkInterval);
+        }
+
+        // Helper function to set time fields and click Add
+        function processTimes(entry, formatTimeValue) {
+            const ojtStartTime = document.getElementById('ojtStartTime');
+            if (ojtStartTime) {
+                ojtStartTime.focus();
+                ojtStartTime.value = entry['From'] || '';
+                ojtStartTime.dispatchEvent(new Event('input', { bubbles: true }));
+                ojtStartTime.dispatchEvent(new Event('change', { bubbles: true }));
+                ojtStartTime.blur();
+                ojtStartTime.dispatchEvent(new Event('blur', { bubbles: true }));
+            }
+
+            const ojtEndTime = document.getElementById('ojtEndTime');
+            if (ojtEndTime) {
+                ojtEndTime.focus();
+                ojtEndTime.value = formatTimeValue;
+                ojtEndTime.dispatchEvent(new Event('input', { bubbles: true }));
+                ojtEndTime.dispatchEvent(new Event('change', { bubbles: true }));
+                ojtEndTime.blur();
+                ojtEndTime.dispatchEvent(new Event('blur', { bubbles: true }));
+            }
+
+            console.log(`IAMATC Logger: All fields filled completely for row ${index + 1}. Waiting for user to click Add or Reset.`);
+
+            if (typeof globalAutoAdd !== 'undefined' && globalAutoAdd) {
+                setTimeout(() => {
+                    const addBtn = document.getElementById('btnAddanssTrnTrainingDtlsVOList');
+                    if (addBtn) addBtn.click();
+                }, 1000);
+            }
+        }
+
         // Set postingStation
         const postingStation = document.querySelector('select[name="postingStation"]');
         if (postingStation) {
-            // Simulate user interacting with the dropdown to trigger dynamic options load
-            postingStation.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-            postingStation.dispatchEvent(new Event('focus', { bubbles: true }));
-            postingStation.click();
-
-            // Wait briefly for the site's scripts to populate the options
-            setTimeout(() => {
-                // Set to the exact value provided by the user
-                postingStation.value = "100120";
-
-                // Trigger events to let the site know the value changed
-                postingStation.dispatchEvent(new Event('input', { bubbles: true }));
-                postingStation.dispatchEvent(new Event('change', { bubbles: true }));
-
-                // Now interact with the next cascading dropdown
+            setDropdownWhenReady(postingStation, "100120", () => {
                 const atStoEgcaId = document.querySelector('select[name="atStoEgcaId"]');
                 if (atStoEgcaId) {
-                    atStoEgcaId.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-                    atStoEgcaId.dispatchEvent(new Event('focus', { bubbles: true }));
-                    atStoEgcaId.click();
-
-                    setTimeout(() => {
-                        atStoEgcaId.value = "OAAIM20210000010124";
-                        atStoEgcaId.dispatchEvent(new Event('input', { bubbles: true }));
-                        atStoEgcaId.dispatchEvent(new Event('change', { bubbles: true }));
-
-                        // Now interact with the final cascading dropdown
+                    setDropdownWhenReady(atStoEgcaId, "OAAIM20210000010124", () => {
                         const ratingId = document.querySelector('select[name="ratingId"]');
                         if (ratingId) {
-                            ratingId.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-                            ratingId.dispatchEvent(new Event('focus', { bubbles: true }));
-                            ratingId.click();
+                            const unitValue = entry['Unit'] ? entry['Unit'].trim() : "";
+                            let ratingVal = "";
+                            if (unitValue === "ADC") ratingVal = "8000310";
+                            else if (unitValue === "ADC+APP") ratingVal = "8000500";
+                            else if (unitValue === "APP(S)") ratingVal = "8000312";
 
-                            setTimeout(() => {
-                                const unitValue = entry['Unit'] ? entry['Unit'].trim() : "";
-                                if (unitValue === "ADC") {
-                                    ratingId.value = "8000310";
-                                } else if (unitValue === "ADC+APP") {
-                                    ratingId.value = "8000500";
-                                } else if (unitValue === "APP(S)") {
-                                    ratingId.value = "8000312";
-                                }
-                                ratingId.dispatchEvent(new Event('input', { bubbles: true }));
-                                ratingId.dispatchEvent(new Event('change', { bubbles: true }));
-
-                                // Now interact with atsUnitId
+                            setDropdownWhenReady(ratingId, ratingVal, () => {
                                 const atsUnitId = document.querySelector('select[name="atsUnitId"]');
                                 if (atsUnitId) {
-                                    atsUnitId.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-                                    atsUnitId.dispatchEvent(new Event('focus', { bubbles: true }));
-                                    atsUnitId.click();
+                                    let atsVal = "";
+                                    if (unitValue === "ADC") atsVal = "ADC1";
+                                    else if (unitValue === "ADC+APP") atsVal = "ADCAPP1";
 
-                                    setTimeout(() => {
-                                        if (unitValue === "ADC") {
-                                            atsUnitId.value = "ADC1";
-                                        } else if (unitValue === "ADC+APP") {
-                                            atsUnitId.value = "ADCAPP1";
-                                        }
-                                        atsUnitId.dispatchEvent(new Event('input', { bubbles: true }));
-                                        atsUnitId.dispatchEvent(new Event('change', { bubbles: true }));
-
-                                        // Next: typeOfDutyId
+                                    setDropdownWhenReady(atsUnitId, atsVal, () => {
                                         const typeOfDutyId = document.querySelector('select[name="typeOfDutyId"]');
                                         if (typeOfDutyId) {
-                                            typeOfDutyId.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-                                            typeOfDutyId.dispatchEvent(new Event('focus', { bubbles: true }));
-                                            typeOfDutyId.click();
-
-                                            setTimeout(() => {
-                                                typeOfDutyId.value = "1";
-                                                typeOfDutyId.dispatchEvent(new Event('input', { bubbles: true }));
-                                                typeOfDutyId.dispatchEvent(new Event('change', { bubbles: true }));
-
-
-
-                                                // Set Start Time (Column D -> 'From')
-                                                const ojtStartTime = document.getElementById('ojtStartTime');
-                                                if (ojtStartTime) {
-                                                    ojtStartTime.focus();
-                                                    ojtStartTime.value = entry['From'] || '';
-                                                    ojtStartTime.dispatchEvent(new Event('input', { bubbles: true }));
-                                                    ojtStartTime.dispatchEvent(new Event('change', { bubbles: true }));
-                                                    ojtStartTime.blur();
-                                                    ojtStartTime.dispatchEvent(new Event('blur', { bubbles: true }));
-                                                }
-
-                                                // Set End Time (Column E -> 'To')
-                                                const ojtEndTime = document.getElementById('ojtEndTime');
-                                                if (ojtEndTime) {
-                                                    ojtEndTime.focus();
-                                                    ojtEndTime.value = formatTimeValue;
-                                                    ojtEndTime.dispatchEvent(new Event('input', { bubbles: true }));
-                                                    ojtEndTime.dispatchEvent(new Event('change', { bubbles: true }));
-                                                    ojtEndTime.blur();
-                                                    ojtEndTime.dispatchEvent(new Event('blur', { bubbles: true }));
-                                                }
-
-
-                                                console.log(`IAMATC Logger: All fields filled completely for row ${index + 1}. Waiting for user to click Add or Reset.`);
-
-                                                if (typeof globalAutoAdd !== 'undefined' && globalAutoAdd) {
-                                                    setTimeout(() => {
-                                                        const addBtn = document.getElementById('btnAddanssTrnTrainingDtlsVOList');
-                                                        if (addBtn) addBtn.click();
-                                                    }, 1000);
-                                                }
-                                            }, 500);
+                                            setDropdownWhenReady(typeOfDutyId, "1", () => {
+                                                processTimes(entry, formatTimeValue);
+                                            });
                                         } else {
                                             console.log("IAMATC Logger: Form filled up to atsUnitId. Data used:", entry);
                                         }
-                                    }, 500);
+                                    });
                                 } else {
                                     console.log("IAMATC Logger: Form filled up to ratingId. Data used:", entry);
                                 }
-                            }, 500);
+                            });
                         } else {
                             console.log("IAMATC Logger: Form filled up to atStoEgcaId. Data used:", entry);
                         }
-                    }, 500);
+                    });
                 } else {
                     console.log("IAMATC Logger: Form filled up to postingStation. Data used:", entry);
                 }
-            }, 500); // 500ms delay to ensure options load faster
+            });
         } else {
             console.log("IAMATC Logger: Form filled (without station). Data used:", entry);
         }
