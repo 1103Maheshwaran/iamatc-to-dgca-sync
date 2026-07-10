@@ -223,6 +223,7 @@ if (typeof window.dgcaAutoLoggerInitialized === 'undefined') {
                                     let atsVal = "";
                                     if (unitValue === "ADC") atsVal = "ADC1";
                                     else if (unitValue === "ADC+APP") atsVal = "ADCAPP1";
+                                    else if (unitValue === "APP(S)") atsVal = "APP(s)1";
 
                                     setDropdownWhenReady(atsUnitId, atsVal, () => {
                                         const typeOfDutyId = document.querySelector('select[name="typeOfDutyId"]');
